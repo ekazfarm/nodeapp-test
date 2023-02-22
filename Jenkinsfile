@@ -36,15 +36,16 @@ pipeline {
       } 
     } 
  
-    stage('Apply Kubernetes Files') {
-        steps {
-            withKubeConfig([credentialsId: 'kubernetes']) {
-            sh 'cat deploymentservice.yaml | sed "s/{{BUILD_NUMBER}}/$BUILD_NUMBER/g" | kubectl apply -f -'
-            sh 'kubectl apply -f deploymentservice.yaml'
-          }
+    stage('Deploy ke cluster') {
+      steps {
+        sshagent(['k8s']) {
+          sh "ssh -t -o StrictHostKeyChecking=no root@192.168.14.11"
+          sh "scp /var/jenkins_home/workspace/deploy-nodeapp/deploymentservice.yml root@192.168.14.11:/root"
+          sh "ssh -t -o StrictHostKeyCheking=no root@192.168.14.11 kubectl delete -f deploymentservice.yml"
+          sh "ssh -t -o StrictHostKeyCheking=no root@192.168.14.11 kubectl kubectl apply -f deploymentservice.yml"
         }
+      }
     }
-
  
   } 
  
